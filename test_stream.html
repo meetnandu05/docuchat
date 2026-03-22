@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Streaming Chat Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 20px;
+        }
+        #chat-box { 
+            border: 1px solid #ddd; 
+            padding: 20px; 
+            height: 300px; 
+            overflow-y: auto; 
+            background: #f9f9f9;
+            margin-bottom: 20px;
+        }
+        #prompt { 
+            width: 100%; 
+            padding: 10px; 
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button { 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { 
+            background: #ccc; 
+            cursor: not-allowed;
+        }
+        .message { 
+            margin: 10px 0; 
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+        .user { background: #e3f2fd; }
+        .assistant { background: #f1f8e9; }
+    </style>
+</head>
+<body>
+    <h1>Streaming Chat Test</h1>
+    <div id="chat-box"></div>
+    <textarea id="prompt" rows="3" placeholder="Type your message here..."></textarea>
+    <button onclick="sendMessage()" id="send-btn">Send</button>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const promptInput = document.getElementById('prompt');
+        const sendBtn = document.getElementById('send-btn');
+
+        function addMessage(role, content) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+            msgDiv.innerHTML = `<strong>${role}:</strong> ${content}`;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return msgDiv;
+        }
+
+        async function sendMessage() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+
+            // Disable input
+            sendBtn.disabled = true;
+            promptInput.disabled = true;
+
+            // Add user message
+            addMessage('user', prompt);
+
+            // Create placeholder for assistant response
+            const assistantMsg = addMessage('assistant', '...');
+            let fullResponse = '';
+
+            try {
+                const response = await fetch('http://localhost:8000/chat/stream', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: 'user', content: prompt }
+                        ],
+                        model: 'llama3.2',
+                        temperature: 0.7
+                    })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') break;
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.content) {
+                                    fullResponse += parsed.content;
+                                    assistantMsg.innerHTML = `<strong>assistant:</strong> ${fullResponse}`;
+                                }
+                            } catch (e) {
+                                // Ignore parse errors
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                assistantMsg.innerHTML = `<strong>assistant:</strong> Error: ${error.message}`;
+            }
+
+            // Re-enable input
+            sendBtn.disabled = false;
+            promptInput.disabled = false;
+            promptInput.value = '';
+            promptInput.focus();
+        }
+
+        // Allow Enter to send (Shift+Enter for new line)
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
