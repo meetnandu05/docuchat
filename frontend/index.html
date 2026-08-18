@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuChat - Chat with Your Documents</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>📄 DocuChat</h1>
+                <p class="subtitle">Chat with your documents</p>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-content">
+                        <span class="drop-icon">📁</span>
+                        <p>Drop PDF here or <label for="fileInput" class="file-label">browse</label></p>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                    </div>
+                    <div class="upload-progress" id="uploadProgress" hidden>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">Uploading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents List -->
+            <div class="documents-section">
+                <h3>Your Documents</h3>
+                <div class="documents-list" id="documentsList">
+                    <p class="empty-state">No documents uploaded yet</p>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-section" id="statsSection">
+                <div class="stat">
+                    <span class="stat-value" id="docCount">0</span>
+                    <span class="stat-label">Documents</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="chunkCount">0</span>
+                    <span class="stat-label">Chunks</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-area">
+            <div class="messages-container" id="messagesContainer">
+                <div class="welcome-message">
+                    <h2>👋 Welcome to DocuChat</h2>
+                    <p>Upload a PDF document and start asking questions about it.</p>
+                    <div class="suggestions">
+                        <button class="suggestion-btn" onclick="askSuggestion('What is this document about?')">
+                            What is this document about?
+                        </button>
+                        <button class="suggestion-btn" onclick="askSuggestion('Summarize the key points')">
+                            Summarize the key points
+                        </button>
+                        <button class="suggestion-btn" onclick="askSuggestion('What are the main conclusions?')">
+                            What are the main conclusions?
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <form id="chatForm" class="chat-form">
+                    <textarea
+                        id="chatInput"
+                        placeholder="Ask a question about your documents..."
+                        rows="1"
+                        disabled
+                    ></textarea>
+                    <button type="submit" id="sendBtn" disabled>
+                        <span class="send-icon">➤</span>
+                    </button>
+                </form>
+                <p class="input-hint" id="inputHint">Upload a document to start chatting</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

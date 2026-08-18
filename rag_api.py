@@ -37,8 +37,8 @@ class DocumentInfo(BaseModel):
     name: str
     chunks: int
 
-@app.get("/")
-def read_root():
+@app.get("/api")
+def api_info():
     return {
         "message": "DocuChat API - RAG-powered document Q&A",
         "version": "1.0.0",
@@ -131,6 +131,12 @@ def get_stats():
     Get system statistics
     """
     return rag.get_stats()
+
+# Serve frontend static files (must be after all API routes)
+from fastapi.staticfiles import StaticFiles
+frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend')
+if os.path.exists(frontend_dir):
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
