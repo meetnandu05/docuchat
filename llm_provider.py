@@ -62,5 +62,8 @@ def _groq_chat(messages: list, model: str, temperature: float) -> str:
         timeout=30
     )
     
-    response.raise_for_status()
+    if not response.ok:
+        print(f"Groq API error {response.status_code}: {response.text}")
+        response.raise_for_status()
+    
     return response.json()["choices"][0]["message"]["content"]
