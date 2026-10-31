@@ -15,7 +15,7 @@ class RAGEngine:
         if model_name:
             self.model_name = model_name
         elif os.getenv("LLM_PROVIDER", "ollama") == "groq":
-            self.model_name = "llama-3.1-8b-instant"
+            self.model_name = "openai/gpt-oss-20b"
         else:
             self.model_name = "llama3.2"
         

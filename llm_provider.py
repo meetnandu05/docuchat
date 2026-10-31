@@ -22,7 +22,7 @@ def get_llm_response(messages: list, model: str = None, temperature: float = 0.3
     provider = os.getenv("LLM_PROVIDER", "ollama").lower()
     
     if provider == "groq":
-        return _groq_chat(messages, model or "llama-3.1-8b-instant", temperature)
+        return _groq_chat(messages, model or "openai/gpt-oss-20b", temperature)
     else:
         return _ollama_chat(messages, model or "llama3.2", temperature)
 
