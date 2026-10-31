@@ -37,7 +37,7 @@ We'll use a **cloud LLM API** for the deployed version. The best free option rig
 | Feature | Ollama (Local) | Groq (Cloud) |
 |---------|---------------|--------------|
 | Cost | Free | Free tier (generous) |
-| Speed | Depends on your hardware | Extremely fast (~500 tokens/sec) |
+| Speed | Depends on your hardware | Extremely fast (~1000 tokens/sec) |
 | Privacy | 100% local | Data sent to Groq servers |
 | Setup | Install Ollama + pull model | Get API key |
 | RAM needed | 4GB+ | ~100MB (just your app) |
@@ -61,7 +61,7 @@ The key insight: **the retrieval part (ChromaDB, embeddings) still runs locally 
 3. Go to **API Keys** → **Create API Key**
 4. Copy and save the key — you'll need it soon
 
-Groq's free tier gives you 30 requests per minute with models like Llama 3, which is more than enough for a demo app.
+Groq's free tier gives you models like GPT-OSS 20B at 1000 tokens/sec, which is more than enough for a demo app.
 
 ## Step 2: Make the App Provider-Agnostic
 
@@ -94,7 +94,7 @@ def get_llm_response(messages: list, model: str = None, temperature: float = 0.3
     provider = os.getenv("LLM_PROVIDER", "ollama").lower()
     
     if provider == "groq":
-        return _groq_chat(messages, model or "llama-3.1-8b-instant", temperature)
+        return _groq_chat(messages, model or "openai/gpt-oss-20b", temperature)
     else:
         return _ollama_chat(messages, model or "llama3.2", temperature)
 
@@ -205,7 +205,7 @@ class RAGEngine:
         if model_name:
             self.model_name = model_name
         elif os.getenv("LLM_PROVIDER", "ollama") == "groq":
-            self.model_name = "llama-3.1-8b-instant"
+            self.model_name = "openai/gpt-oss-20b"
         else:
             self.model_name = "llama3.2"
         
@@ -576,7 +576,7 @@ Over five parts, we built a production-ready AI application from scratch:
 
 The final tech stack:
 
-- **LLM**: Ollama (local) / Groq (deployed) — Llama 3
+- **LLM**: Ollama (local) / Groq (deployed) — GPT-OSS 20B
 - **Backend**: FastAPI + Python
 - **Vector DB**: ChromaDB
 - **Embeddings**: sentence-transformers / ChromaDB built-in (all-MiniLM-L6-v2)
