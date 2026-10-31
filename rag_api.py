@@ -132,6 +132,11 @@ def get_stats():
     """
     return rag.get_stats()
 
+@app.get("/health")
+def health_check():
+    """Health check for Render"""
+    return {"status": "healthy", "provider": os.getenv("LLM_PROVIDER", "ollama")}
+
 # Serve frontend static files (must be after all API routes)
 from fastapi.staticfiles import StaticFiles
 frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend')

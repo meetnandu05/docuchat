@@ -1,7 +1,10 @@
-fastapi
-uvicorn
-ollama
-requests
-chromadb
-pypdf
-sentence-transformers
+fastapi==0.115.0
+uvicorn==0.32.0
+requests==2.32.3
+chromadb==0.5.23
+pypdf==5.1.0
+sentence-transformers==3.3.1
+python-multipart==0.0.17
+
+# Only needed for local development (Ollama)
+# ollama==0.4.4
