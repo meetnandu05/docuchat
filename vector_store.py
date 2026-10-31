@@ -1,7 +1,7 @@
 import chromadb
 from chromadb.config import Settings
 from typing import List, Dict
-from sentence_transformers import SentenceTransformer
+import os
 
 class VectorStore:
     """Manage vector database for document chunks"""
@@ -17,10 +17,16 @@ class VectorStore:
         # Initialize ChromaDB client
         self.client = chromadb.PersistentClient(path=persist_directory)
         
-        # Initialize embedding model (free, runs locally)
-        print("Loading embedding model...")
-        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-        print("Embedding model loaded!")
+        # When deployed, use ChromaDB's built-in embedder (onnxruntime, ~100MB)
+        # Locally, use sentence-transformers (PyTorch, better quality but ~2GB)
+        if os.getenv("LLM_PROVIDER") == "groq":
+            print("Using ChromaDB built-in embedder (lightweight)")
+            self.embedding_model = None
+        else:
+            print("Loading embedding model...")
+            from sentence_transformers import SentenceTransformer
+            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+            print("Embedding model loaded!")
         
         # Get or create collection
         self.collection = self.client.get_or_create_collection(
@@ -64,16 +70,22 @@ class VectorStore:
             for chunk in chunks
         ]
         
-        # Create embeddings
-        embeddings = self.create_embeddings(texts)
-        
-        # Add to database
-        self.collection.add(
-            embeddings=embeddings,
-            documents=texts,
-            ids=ids,
-            metadatas=metadatas
-        )
+        # Add to database (with or without explicit embeddings)
+        if self.embedding_model:
+            embeddings = self.create_embeddings(texts)
+            self.collection.add(
+                embeddings=embeddings,
+                documents=texts,
+                ids=ids,
+                metadatas=metadatas
+            )
+        else:
+            # ChromaDB generates embeddings automatically
+            self.collection.add(
+                documents=texts,
+                ids=ids,
+                metadatas=metadatas
+            )
         
         print(f"✓ Added {len(chunks)} chunks from {document_name}")
     
@@ -88,15 +100,21 @@ class VectorStore:
         Returns:
             Dictionary with results and metadata
         """
-        # Create embedding for query
-        query_embedding = self.create_embeddings([query])[0]
-        
-        # Search
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=n_results,
-            include=['documents', 'metadatas', 'distances']
-        )
+        if self.embedding_model:
+            # Use explicit embeddings
+            query_embedding = self.create_embeddings([query])[0]
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results,
+                include=['documents', 'metadatas', 'distances']
+            )
+        else:
+            # Let ChromaDB handle embedding
+            results = self.collection.query(
+                query_texts=[query],
+                n_results=n_results,
+                include=['documents', 'metadatas', 'distances']
+            )
         
         return results
     
